@@ -1,4 +1,4 @@
-from app.bot import WEB_APP_COMMANDS, build_start_text, build_web_app_keyboard
+from app.bot import BOT_COMMANDS, WEB_APP_COMMANDS, build_start_text, build_web_app_keyboard
 from app.config import Settings
 
 
@@ -21,7 +21,11 @@ def test_start_text_explains_telegram_json_upload() -> None:
     assert "не публикуется" in text
 
 
-def test_pic_command_is_registered_as_web_app_alias() -> None:
-    assert "webapp" in WEB_APP_COMMANDS
+def test_bot_menu_commands_include_pic_shortcut() -> None:
+    commands = {command.command: command.description for command in BOT_COMMANDS}
+
+    assert "start" in commands
     assert "pic" in WEB_APP_COMMANDS
+    assert commands["pic"] == "Открыть мини-приложение анализатора"
+    assert "webapp" in commands
 

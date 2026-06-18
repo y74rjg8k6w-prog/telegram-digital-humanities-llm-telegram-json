@@ -116,7 +116,8 @@ jupyter lab notebooks/research.ipynb
 - FastAPI отдает веб-интерфейс;
 - HTML подключает официальный `telegram-web-app.js`;
 - фронтенд вызывает `Telegram.WebApp.ready()` и `Telegram.WebApp.expand()`;
-- бот отправляет inline Web App кнопку по `/start` и `/webapp`;
+- бот отправляет inline Web App кнопку по `/start`, `/webapp` и короткой команде `/pic`;
+- бот регистрирует команды `/start`, `/pic`, `/webapp` в меню команд Telegram;
 - при публичном HTTPS `WEB_APP_URL` бот ставит постоянную кнопку меню **Анализатор**.
 
 ```bash

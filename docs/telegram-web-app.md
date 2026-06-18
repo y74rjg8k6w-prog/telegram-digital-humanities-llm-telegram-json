@@ -5,7 +5,7 @@ This project is already structured as a Telegram Web App:
 - `app/main.py` serves the FastAPI web interface.
 - `app/templates/index.html` loads `https://telegram.org/js/telegram-web-app.js`.
 - `app/static/app.js` calls `Telegram.WebApp.ready()` and `Telegram.WebApp.expand()`.
-- `app/bot.py` sends an inline `web_app` button and, when `WEB_APP_URL` is public HTTPS, installs a Telegram menu button.
+- `app/bot.py` sends inline `web_app` buttons for `/start`, `/webapp`, and `/pic`; it also registers those commands and, when `WEB_APP_URL` is public HTTPS, installs a Telegram menu button.
 
 ## Local smoke run
 
@@ -57,12 +57,14 @@ Telegram Web Apps require a public HTTPS URL.
    python3 -m app.bot
    ```
 
-6. In Telegram, send `/start` or `/webapp` to the bot and tap **Открыть анализатор**.
+6. In Telegram, send `/start`, `/pic`, or `/webapp` to the bot and tap **Открыть анализатор**.
 
 ## Bot behavior
 
 - `/start` explains what the app does and shows the Web App button.
+- `/pic` sends the Web App button directly as the short mini-app command.
 - `/webapp` sends the Web App button directly.
+- On startup, the bot registers `/start`, `/pic`, and `/webapp` in Telegram's command menu.
 - On startup, if `WEB_APP_URL` starts with `https://`, the bot registers a persistent menu button named **Анализатор**.
 
 ## Privacy note

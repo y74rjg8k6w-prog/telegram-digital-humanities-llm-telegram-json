@@ -2,7 +2,7 @@ import asyncio
 
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command, CommandStart
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, MenuButtonWebApp, Message, WebAppInfo
+from aiogram.types import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, MenuButtonWebApp, Message, WebAppInfo
 
 from app.config import Settings, get_settings
 
@@ -10,6 +10,11 @@ from app.config import Settings, get_settings
 WEB_APP_BUTTON_TEXT = "Открыть анализатор"
 MENU_BUTTON_TEXT = "Анализатор"
 WEB_APP_COMMANDS = ("webapp", "pic")
+BOT_COMMANDS = (
+    BotCommand(command="start", description="Открыть описание и кнопку анализатора"),
+    BotCommand(command="pic", description="Открыть мини-приложение анализатора"),
+    BotCommand(command="webapp", description="Открыть Telegram Web App"),
+)
 
 
 def build_web_app_keyboard(settings: Settings) -> InlineKeyboardMarkup:
@@ -50,6 +55,10 @@ async def configure_menu_button(bot: Bot, settings: Settings) -> None:
     )
 
 
+async def configure_bot_commands(bot: Bot) -> None:
+    await bot.set_my_commands(list(BOT_COMMANDS))
+
+
 async def main() -> None:
     settings = get_settings()
     if not settings.bot_token:
@@ -72,6 +81,7 @@ async def main() -> None:
             reply_markup=build_web_app_keyboard(settings),
         )
 
+    await configure_bot_commands(bot)
     await configure_menu_button(bot, settings)
     await dp.start_polling(bot)
 
