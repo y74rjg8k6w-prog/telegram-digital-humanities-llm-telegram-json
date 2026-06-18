@@ -1,4 +1,4 @@
-from app.bot import build_start_text, build_web_app_keyboard
+from app.bot import WEB_APP_COMMANDS, build_start_text, build_web_app_keyboard
 from app.config import Settings
 
 
@@ -19,3 +19,9 @@ def test_start_text_explains_telegram_json_upload() -> None:
     assert "Telegram Web App" in text
     assert "result.json" in text
     assert "не публикуется" in text
+
+
+def test_pic_command_is_registered_as_web_app_alias() -> None:
+    assert "webapp" in WEB_APP_COMMANDS
+    assert "pic" in WEB_APP_COMMANDS
+

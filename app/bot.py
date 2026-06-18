@@ -9,6 +9,7 @@ from app.config import Settings, get_settings
 
 WEB_APP_BUTTON_TEXT = "Открыть анализатор"
 MENU_BUTTON_TEXT = "Анализатор"
+WEB_APP_COMMANDS = ("webapp", "pic")
 
 
 def build_web_app_keyboard(settings: Settings) -> InlineKeyboardMarkup:
@@ -64,7 +65,7 @@ async def main() -> None:
             reply_markup=build_web_app_keyboard(settings),
         )
 
-    @dp.message(Command("webapp"))
+    @dp.message(Command(*WEB_APP_COMMANDS))
     async def webapp(message: Message) -> None:
         await message.answer(
             "Открой Telegram Web App кнопкой ниже:",
