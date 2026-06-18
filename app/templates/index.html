@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Анализатор переписки</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Digital humanities + LLM</p>
+          <h1>Анализатор Telegram-переписки</h1>
+          <p class="lead">Загрузи <code>result.json</code>, чтобы увидеть ритм общения, взаимность, темы, TF-IDF и осторожный портрет отношений.</p>
+        </div>
+      </section>
+
+      <section class="uploader" id="dropZone">
+        <input id="fileInput" type="file" accept="application/json,.json" />
+        <button id="analyzeButton" type="button">Проанализировать</button>
+        <p id="status">Файл не выбран</p>
+      </section>
+
+      <section id="results" class="results hidden">
+        <div class="metrics-grid" id="metricsGrid"></div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Активность по дням</h2>
+          </div>
+          <canvas id="dailyChart" height="170"></canvas>
+        </div>
+
+        <div class="columns">
+          <div class="panel">
+            <h2>Ключевые слова</h2>
+            <div id="topWords" class="tags"></div>
+          </div>
+          <div class="panel">
+            <h2>Участники</h2>
+            <div id="senders"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Граф диалога</h2>
+          <div id="network" class="network"></div>
+        </div>
+
+        <div class="panel">
+          <h2>LLM-портрет</h2>
+          <p id="summary" class="summary"></p>
+        </div>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
