@@ -111,16 +111,26 @@ jupyter lab notebooks/research.ipynb
 
 ## Запуск Telegram Web App
 
+Проект уже собран как Telegram Web App:
+
+- FastAPI отдает веб-интерфейс;
+- HTML подключает официальный `telegram-web-app.js`;
+- фронтенд вызывает `Telegram.WebApp.ready()` и `Telegram.WebApp.expand()`;
+- бот отправляет inline Web App кнопку по `/start` и `/webapp`;
+- при публичном HTTPS `WEB_APP_URL` бот ставит постоянную кнопку меню **Анализатор**.
+
 ```bash
 cp .env.example .env
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Для запуска внутри Telegram нужен публичный HTTPS URL, например туннель `ngrok http 8000`. Его необходимо записать в `WEB_APP_URL`, а затем запустить минимального бота-кнопку:
+Для запуска внутри Telegram нужен публичный HTTPS URL, например туннель `ngrok http 8000`. Его необходимо записать в `WEB_APP_URL`, а затем запустить бота:
 
 ```bash
 python3 -m app.bot
 ```
+
+Подробный чеклист: [docs/telegram-web-app.md](docs/telegram-web-app.md).
 
 DeepSeek опционален. Без `DEEPSEEK_API_KEY` приложение показывает все вычисляемые результаты и локальное текстовое резюме.
 
