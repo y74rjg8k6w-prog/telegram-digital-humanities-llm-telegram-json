@@ -5,6 +5,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, MenuButtonWebApp, Message, WebAppInfo
 
 from app.config import Settings, get_settings
+from app.message_analysis import format_single_message_report
 
 
 WEB_APP_BUTTON_TEXT = "Открыть анализатор"
@@ -33,6 +34,8 @@ def build_web_app_keyboard(settings: Settings) -> InlineKeyboardMarkup:
 def build_start_text() -> str:
     return (
         "Это Telegram Web App для анализа переписки.\n\n"
+        "Быстрый демо-режим: просто пришли боту одно любое сообщение — он сразу вернёт мини-аналитику текста.\n\n"
+        "Полный режим:\n"
         "1. Экспортируй личный чат из Telegram Desktop в формате JSON.\n"
         "2. Открой анализатор кнопкой ниже.\n"
         "3. Загрузи result.json и получи метрики, графики, TF-IDF и осторожный LLM-портрет.\n\n"
@@ -80,6 +83,13 @@ async def main() -> None:
             "Открой Telegram Web App кнопкой ниже:",
             reply_markup=build_web_app_keyboard(settings),
         )
+
+    @dp.message()
+    async def analyze_text_message(message: Message) -> None:
+        if not message.text:
+            await message.answer("Пришли текстовое сообщение — я сделаю быстрый мини-анализ.")
+            return
+        await message.answer(format_single_message_report(message.text), reply_markup=build_web_app_keyboard(settings))
 
     await configure_bot_commands(bot)
     await configure_menu_button(bot, settings)

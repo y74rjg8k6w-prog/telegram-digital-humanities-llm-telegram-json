@@ -1,5 +1,6 @@
 from app.bot import BOT_COMMANDS, WEB_APP_COMMANDS, build_start_text, build_web_app_keyboard
 from app.config import Settings
+from app.message_analysis import format_single_message_report
 
 
 def test_start_keyboard_contains_telegram_web_app_button() -> None:
@@ -17,8 +18,17 @@ def test_start_text_explains_telegram_json_upload() -> None:
     text = build_start_text()
 
     assert "Telegram Web App" in text
+    assert "одно любое сообщение" in text
     assert "result.json" in text
     assert "не публикуется" in text
+
+
+def test_text_message_report_contains_minianalysis() -> None:
+    report = format_single_message_report("Привет! Как ты? Давай созвонимся вечером 😊")
+
+    assert "Мини-анализ сообщения" in report
+    assert "Тон:" in report
+    assert "Намерение:" in report
 
 
 def test_bot_menu_commands_include_pic_shortcut() -> None:

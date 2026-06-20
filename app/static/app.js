@@ -8,6 +8,10 @@ const fileInput = document.getElementById("fileInput");
 const analyzeButton = document.getElementById("analyzeButton");
 const statusNode = document.getElementById("status");
 const resultsNode = document.getElementById("results");
+const messageInput = document.getElementById("messageInput");
+const messageButton = document.getElementById("messageButton");
+const messageStatus = document.getElementById("messageStatus");
+const messageResult = document.getElementById("messageResult");
 let dailyChart;
 
 fileInput.addEventListener("change", () => {
@@ -40,6 +44,50 @@ analyzeButton.addEventListener("click", async () => {
     analyzeButton.disabled = false;
   }
 });
+
+messageButton.addEventListener("click", async () => {
+  const text = messageInput.value.trim();
+  if (!text) {
+    messageStatus.textContent = "Вставь одно сообщение для разбора";
+    return;
+  }
+
+  messageButton.disabled = true;
+  messageStatus.textContent = "Разбираю сообщение...";
+
+  try {
+    const response = await fetch("/api/analyze-message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || "Ошибка анализа сообщения");
+    }
+    renderMessageAnalysis(data);
+    messageStatus.textContent = "Готово";
+  } catch (error) {
+    messageStatus.textContent = error.message;
+  } finally {
+    messageButton.disabled = false;
+  }
+});
+
+function renderMessageAnalysis(data) {
+  const metrics = data.metrics;
+  const keywords = data.keywords.length ? data.keywords.join(", ") : "нет ярких ключевых слов";
+  messageResult.classList.remove("hidden");
+  messageResult.innerHTML = `<div class="mini-metrics">
+      <div><strong>${metrics.words}</strong><span>слов</span></div>
+      <div><strong>${metrics.questions}</strong><span>вопросность</span></div>
+      <div><strong>${metrics.emoji_count}</strong><span>эмодзи</span></div>
+    </div>
+    <p><strong>Тон:</strong> ${escapeHtml(data.tone)}</p>
+    <p><strong>Намерение:</strong> ${escapeHtml(data.intent)}</p>
+    <p><strong>Ключевые слова:</strong> ${escapeHtml(keywords)}</p>
+    <p>${escapeHtml(data.summary)}</p>`;
+}
 
 function renderResults(data) {
   resultsNode.classList.remove("hidden");

@@ -19,9 +19,24 @@
       </section>
 
       <section class="uploader" id="dropZone">
+        <div class="section-copy">
+          <h2>Полный анализ файла</h2>
+          <p>Загрузи экспорт Telegram Desktop <code>result.json</code>, чтобы получить метрики и графики по диалогу.</p>
+        </div>
         <input id="fileInput" type="file" accept="application/json,.json" />
-        <button id="analyzeButton" type="button">Проанализировать</button>
+        <button id="analyzeButton" type="button">Проанализировать файл</button>
         <p id="status">Файл не выбран</p>
+      </section>
+
+      <section class="message-demo">
+        <div class="section-copy">
+          <h2>Быстрый пример по одному сообщению</h2>
+          <p>Вставь любое сообщение — mini app сразу покажет тон, намерение и ключевые признаки. Такой же анализ бот отдаёт прямо в чате.</p>
+        </div>
+        <textarea id="messageInput" rows="4" maxlength="4000" placeholder="Например: Привет! Как ты? Давай сегодня созвонимся после пар."></textarea>
+        <button id="messageButton" type="button">Разобрать сообщение</button>
+        <p id="messageStatus">Можно проверить без загрузки файла</p>
+        <div id="messageResult" class="message-result hidden"></div>
       </section>
 
       <section id="results" class="results hidden">
