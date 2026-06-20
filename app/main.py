@@ -6,7 +6,8 @@ from pydantic import BaseModel
 
 from app.analyzer.pipeline import analyze_telegram_export
 from app.llm import build_llm_summary
-from app.message_analysis import analyze_single_message
+from app.message_analysis import analyze_pasted_messages, analyze_single_message, should_analyze_as_pasted_messages
+from app.storage import save_analysis_result
 
 app = FastAPI(title="Telegram Friendship Analyzer Web App")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -42,6 +43,7 @@ async def analyze(file: UploadFile = File(...)) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     result["llm_summary"] = await build_llm_summary(result)
+    result["storage"] = await save_analysis_result("telegram_export", file.filename, result)
     return result
 
 
@@ -49,6 +51,11 @@ async def analyze(file: UploadFile = File(...)) -> dict:
 async def analyze_message(payload: MessageAnalysisRequest) -> dict:
     if not payload.text.strip():
         raise HTTPException(status_code=400, detail="Введите хотя бы одно сообщение")
-    if len(payload.text) > 4000:
-        raise HTTPException(status_code=413, detail="Сообщение длиннее 4000 символов")
-    return analyze_single_message(payload.text)
+    if len(payload.text) > 12000:
+        raise HTTPException(status_code=413, detail="Вставка длиннее 12000 символов")
+    if should_analyze_as_pasted_messages(payload.text):
+        result = analyze_pasted_messages(payload.text)
+    else:
+        result = analyze_single_message(payload.text)
+    result["storage"] = await save_analysis_result("pasted_message", payload.text, result)
+    return result

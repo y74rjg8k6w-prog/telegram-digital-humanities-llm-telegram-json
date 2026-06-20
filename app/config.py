@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-chat"
+    supabase_url: str = ""
+    supabase_key: str = ""
+    supabase_table: str = "analyses"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

@@ -5,7 +5,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, MenuButtonWebApp, Message, WebAppInfo
 
 from app.config import Settings, get_settings
-from app.message_analysis import format_single_message_report
+from app.message_analysis import format_message_report
 
 
 WEB_APP_BUTTON_TEXT = "Открыть анализатор"
@@ -89,7 +89,7 @@ async def main() -> None:
         if not message.text:
             await message.answer("Пришли текстовое сообщение — я сделаю быстрый мини-анализ.")
             return
-        await message.answer(format_single_message_report(message.text), reply_markup=build_web_app_keyboard(settings))
+        await message.answer(format_message_report(message.text), reply_markup=build_web_app_keyboard(settings))
 
     await configure_bot_commands(bot)
     await configure_menu_button(bot, settings)

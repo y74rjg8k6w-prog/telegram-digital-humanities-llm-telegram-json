@@ -75,9 +75,14 @@ messageButton.addEventListener("click", async () => {
 });
 
 function renderMessageAnalysis(data) {
+  messageResult.classList.remove("hidden");
+  if (data.mode === "multi_message") {
+    renderPastedMessageAnalysis(data);
+    return;
+  }
+
   const metrics = data.metrics;
   const keywords = data.keywords.length ? data.keywords.join(", ") : "нет ярких ключевых слов";
-  messageResult.classList.remove("hidden");
   messageResult.innerHTML = `<div class="mini-metrics">
       <div><strong>${metrics.words}</strong><span>слов</span></div>
       <div><strong>${metrics.questions}</strong><span>вопросность</span></div>
@@ -87,6 +92,24 @@ function renderMessageAnalysis(data) {
     <p><strong>Намерение:</strong> ${escapeHtml(data.intent)}</p>
     <p><strong>Ключевые слова:</strong> ${escapeHtml(keywords)}</p>
     <p>${escapeHtml(data.summary)}</p>`;
+}
+
+function renderPastedMessageAnalysis(data) {
+  const keywords = data.keywords.length ? data.keywords.join(", ") : "нет ярких ключевых слов";
+  const flags = data.red_flags.length
+    ? data.red_flags.slice(0, 4).map((flag) => `<li>${escapeHtml(flag.label)}: ${escapeHtml(flag.speaker)} — «${escapeHtml(flag.snippet)}»</li>`).join("")
+    : "<li>Явных красных флагов по эвристикам не найдено.</li>";
+  messageResult.innerHTML = `<div class="mini-metrics">
+      <div><strong>${data.message_count}</strong><span>сообщений</span></div>
+      <div><strong>${data.friendship.score}%</strong><span>дружба</span></div>
+      <div><strong>${data.abuse.score}%</strong><span>давление</span></div>
+    </div>
+    <p><strong>Дружба/поддержка:</strong> ${escapeHtml(data.friendship.level)} · взаимность ${data.friendship.reciprocity}%</p>
+    <p>${escapeHtml(data.friendship.explanation)}</p>
+    <p><strong>Абьюз/давление:</strong> ${escapeHtml(data.abuse.level)} (${data.abuse.score}%)</p>
+    <p><strong>Ключевые слова:</strong> ${escapeHtml(keywords)}</p>
+    <p><strong>Красные флаги:</strong></p>
+    <ul>${flags}</ul>`;
 }
 
 function renderResults(data) {
