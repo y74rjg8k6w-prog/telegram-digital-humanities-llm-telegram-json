@@ -1,65 +1,17 @@
 import asyncio
 
-from aiogram import Bot, Dispatcher
-from aiogram.filters import Command, CommandStart
-from aiogram.types import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, MenuButtonWebApp, Message, WebAppInfo
+from aiogram import Bot
 
-from app.config import Settings, get_settings
-from app.message_analysis import format_message_report
-
-
-WEB_APP_BUTTON_TEXT = "Открыть анализатор"
-MENU_BUTTON_TEXT = "Анализатор"
-WEB_APP_COMMANDS = ("webapp", "pic")
-BOT_COMMANDS = (
-    BotCommand(command="start", description="Открыть описание и кнопку анализатора"),
-    BotCommand(command="pic", description="Открыть мини-приложение анализатора"),
-    BotCommand(command="webapp", description="Открыть Telegram Web App"),
+from app.bot_handlers import (
+    BOT_COMMANDS,
+    WEB_APP_COMMANDS,
+    build_dispatcher,
+    build_start_text,
+    build_web_app_keyboard,
+    configure_bot_commands,
+    configure_menu_button,
 )
-
-
-def build_web_app_keyboard(settings: Settings) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=WEB_APP_BUTTON_TEXT,
-                    web_app=WebAppInfo(url=settings.web_app_url),
-                )
-            ]
-        ]
-    )
-
-
-def build_start_text() -> str:
-    return (
-        "Это Telegram Web App для анализа переписки.\n\n"
-        "Быстрый демо-режим: просто пришли боту одно любое сообщение — он сразу вернёт мини-аналитику текста.\n\n"
-        "Полный режим:\n"
-        "1. Экспортируй личный чат из Telegram Desktop в формате JSON.\n"
-        "2. Открой анализатор кнопкой ниже.\n"
-        "3. Загрузи result.json и получи метрики, графики, TF-IDF и осторожный LLM-портрет.\n\n"
-        "Исходная переписка не публикуется в GitHub; в репозитории лежит только синтетический пример."
-    )
-
-
-def is_public_https_url(url: str) -> bool:
-    return url.startswith("https://")
-
-
-async def configure_menu_button(bot: Bot, settings: Settings) -> None:
-    if not is_public_https_url(settings.web_app_url):
-        return
-    await bot.set_chat_menu_button(
-        menu_button=MenuButtonWebApp(
-            text=MENU_BUTTON_TEXT,
-            web_app=WebAppInfo(url=settings.web_app_url),
-        )
-    )
-
-
-async def configure_bot_commands(bot: Bot) -> None:
-    await bot.set_my_commands(list(BOT_COMMANDS))
+from app.config import get_settings
 
 
 async def main() -> None:
@@ -68,29 +20,7 @@ async def main() -> None:
         raise RuntimeError("BOT_TOKEN is empty. Add it to .env")
 
     bot = Bot(settings.bot_token)
-    dp = Dispatcher()
-
-    @dp.message(CommandStart())
-    async def start(message: Message) -> None:
-        await message.answer(
-            build_start_text(),
-            reply_markup=build_web_app_keyboard(settings),
-        )
-
-    @dp.message(Command(*WEB_APP_COMMANDS))
-    async def webapp(message: Message) -> None:
-        await message.answer(
-            "Открой Telegram Web App кнопкой ниже:",
-            reply_markup=build_web_app_keyboard(settings),
-        )
-
-    @dp.message()
-    async def analyze_text_message(message: Message) -> None:
-        if not message.text:
-            await message.answer("Пришли текстовое сообщение — я сделаю быстрый мини-анализ.")
-            return
-        await message.answer(format_message_report(message.text), reply_markup=build_web_app_keyboard(settings))
-
+    dp = build_dispatcher(settings)
     await configure_bot_commands(bot)
     await configure_menu_button(bot, settings)
     await dp.start_polling(bot)
