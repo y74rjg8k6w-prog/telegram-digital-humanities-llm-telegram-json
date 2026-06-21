@@ -103,10 +103,15 @@ function renderPastedMessageAnalysis(data) {
       <div><strong>${data.message_count}</strong><span>сообщений</span></div>
       <div><strong>${data.friendship.score}%</strong><span>дружба</span></div>
       <div><strong>${data.abuse.score}%</strong><span>давление</span></div>
+      <div><strong>${data.conversation_health.score}%</strong><span>здоровье</span></div>
     </div>
     <p><strong>Дружба/поддержка:</strong> ${escapeHtml(data.friendship.level)} · взаимность ${data.friendship.reciprocity}%</p>
     <p>${escapeHtml(data.friendship.explanation)}</p>
     <p><strong>Абьюз/давление:</strong> ${escapeHtml(data.abuse.level)} (${data.abuse.score}%)</p>
+    <p><strong>Здоровье диалога:</strong> ${escapeHtml(data.conversation_health.level)} (${data.conversation_health.score}%) · баланс ${data.conversation_health.balance}%, конфликт ${data.conversation_health.conflict}%, срочность ${data.conversation_health.urgency}%</p>
+    <p>${escapeHtml(data.conversation_health.explanation)}</p>
+    <p><strong>Для большой ЦА:</strong></p>
+    <ul>${data.audience_segments.slice(0, 4).map((segment) => `<li>${escapeHtml(segment)}</li>`).join("")}</ul>
     <p><strong>Ключевые слова:</strong> ${escapeHtml(keywords)}</p>
     <p><strong>Красные флаги:</strong></p>
     <ul>${flags}</ul>`;

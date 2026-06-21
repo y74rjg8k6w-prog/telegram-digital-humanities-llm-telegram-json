@@ -1,4 +1,5 @@
 from functools import lru_cache
+import hashlib
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -15,6 +16,21 @@ class Settings(BaseSettings):
     telegram_webhook_secret: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @property
+    def effective_telegram_webhook_secret(self) -> str:
+        """Stable webhook path secret.
+
+        Production deploys should set TELEGRAM_WEBHOOK_SECRET explicitly. For tiny
+        one-bot deployments this fallback keeps the webhook usable when only
+        BOT_TOKEN is configured on the host: the secret is derived from the token
+        and is never committed to the repository.
+        """
+        if self.telegram_webhook_secret:
+            return self.telegram_webhook_secret
+        if not self.bot_token:
+            return ""
+        return hashlib.sha256(f"telegram-webhook:{self.bot_token}".encode()).hexdigest()[:32]
 
 
 @lru_cache

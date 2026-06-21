@@ -89,6 +89,8 @@ def analyze_pasted_messages(text: str) -> dict:
     abuse = _abuse_summary(emotion_scale, red_flags, messages)
     participants = _participant_stats(messages, red_flags)
     friendship = _friendship_summary(emotion_scale, abuse, messages)
+    conversation_health = _conversation_health(messages, emotion_scale, abuse, friendship, red_flags)
+    audience_segments = _audience_segments(messages, conversation_health, red_flags)
     keywords = [word for word, _ in Counter(w for w in words if len(w) >= 4).most_common(8)]
 
     return {
@@ -98,6 +100,8 @@ def analyze_pasted_messages(text: str) -> dict:
         "emotion_scale": emotion_scale,
         "abuse": abuse,
         "friendship": friendship,
+        "conversation_health": conversation_health,
+        "audience_segments": audience_segments,
         "red_flags": red_flags,
         "keywords": keywords,
         "summary": _multi_summary(len(messages), emotion_scale, abuse, red_flags, friendship),
@@ -161,7 +165,14 @@ def format_pasted_messages_report(text: str) -> str:
         f"{analysis['friendship']['explanation']}\n\n"
         f"Абьюз/давление: {abuse['level']} ({abuse['score']}%)\n"
         f"{abuse['explanation']}\n\n"
-        "От кого что видно:\n"
+        f"Здоровье диалога: {analysis['conversation_health']['level']} ({analysis['conversation_health']['score']}%)\n"
+        f"• Баланс: {_bar(analysis['conversation_health']['balance'])} {analysis['conversation_health']['balance']}%\n"
+        f"• Конфликтность: {_bar(analysis['conversation_health']['conflict'])} {analysis['conversation_health']['conflict']}%\n"
+        f"• Срочность: {_bar(analysis['conversation_health']['urgency'])} {analysis['conversation_health']['urgency']}%\n"
+        f"{analysis['conversation_health']['explanation']}\n\n"
+        "Для кого полезно:\n"
+        + "\n".join(f"• {segment}" for segment in analysis["audience_segments"][:4])
+        + "\n\nОт кого что видно:\n"
         + "\n".join(participant_lines)
         + "\n\nКрасные флаги:\n"
         + "\n".join(flag_lines)
@@ -342,6 +353,85 @@ def _friendship_summary(emotion_scale: dict[str, int], abuse: dict, messages: li
         "risk_penalty": risk_penalty,
         "explanation": explanation,
     }
+
+
+def _conversation_health(messages: list[dict], emotion_scale: dict[str, int], abuse: dict, friendship: dict, red_flags: list[dict]) -> dict:
+    message_counts = Counter(message["speaker"] for message in messages)
+    total = sum(message_counts.values())
+    if total <= 0:
+        return {
+            "score": 0,
+            "level": "нет данных",
+            "balance": 0,
+            "conflict": 0,
+            "urgency": 0,
+            "explanation": "Недостаточно сообщений для оценки здоровья диалога.",
+            "recommendations": ["Добавьте хотя бы несколько реплик с обеих сторон."],
+        }
+
+    if len(message_counts) >= 2:
+        shares = [count / total for count in message_counts.values()]
+        balance = round((1 - (max(shares) - min(shares))) * 100)
+    else:
+        balance = 25
+
+    raw_text = "\n".join(message["text"] for message in messages)
+    urgency = min(100, raw_text.count("!") * 8 + raw_text.count("?") * 4 + emotion_scale.get("anxiety", 0) // 2)
+    conflict = min(
+        100,
+        abuse.get("score", 0) // 2
+        + emotion_scale.get("anger", 0) // 2
+        + emotion_scale.get("control", 0) // 3
+        + len(red_flags) * 12,
+    )
+    score = round(max(0, min(100, balance * 0.35 + friendship.get("score", 0) * 0.45 + (100 - conflict) * 0.20 - urgency * 0.08)))
+    if score >= 75:
+        level = "устойчивое"
+    elif score >= 50:
+        level = "нормальное, но есть зоны внимания"
+    elif score >= 25:
+        level = "напряжённое"
+    else:
+        level = "кризисное/рисковое"
+
+    recommendations: list[str] = []
+    if balance < 45:
+        recommendations.append("Проверить дисбаланс: один участник заметно доминирует или отвечает чаще другого.")
+    if conflict >= 45:
+        recommendations.append("Разобрать конфликтные фразы отдельно и не делать вывод по одному сообщению.")
+    if urgency >= 45:
+        recommendations.append("Снизить срочность: перевести диалог из реактивного режима в спокойный разговор.")
+    if red_flags:
+        recommendations.append("Красные флаги перепроверить вручную: угроза, контроль или обесценивание зависят от контекста.")
+    if not recommendations:
+        recommendations.append("Можно смотреть динамику на большем фрагменте: как меняются тепло, баланс и темы.")
+
+    return {
+        "score": score,
+        "level": level,
+        "balance": balance,
+        "conflict": conflict,
+        "urgency": urgency,
+        "explanation": f"Индекс собран из баланса реплик, поддержки, конфликтности и срочности. Главная зона внимания: {recommendations[0]}",
+        "recommendations": recommendations,
+    }
+
+
+def _audience_segments(messages: list[dict], conversation_health: dict, red_flags: list[dict]) -> list[str]:
+    segments = [
+        "Личные переписки: быстро понять тон, взаимность и где разговор начинает ломаться.",
+        "Родители/подростки: увидеть давление, тревожность и безопасно обсудить сложные фразы.",
+        "Комьюнити и чаты: отлавливать токсичность, эскалацию и перекос участия до конфликта.",
+    ]
+    if len({message["speaker"] for message in messages}) >= 3:
+        segments.append("Групповые чаты: сравнить роли участников и кто чаще несёт риск/поддержку.")
+    if red_flags:
+        segments.append("Помогающие специалисты: получить список фрагментов, которые стоит проверить вручную.")
+    elif conversation_health.get("score", 0) >= 70:
+        segments.append("Создатели контента/HR: показывать здоровые примеры коммуникации и поддержки.")
+    else:
+        segments.append("Медиаторы: найти, что именно ухудшает баланс и срочность диалога.")
+    return segments
 
 
 def _multi_summary(message_count: int, emotion_scale: dict[str, int], abuse: dict, red_flags: list[dict], friendship: dict) -> str:

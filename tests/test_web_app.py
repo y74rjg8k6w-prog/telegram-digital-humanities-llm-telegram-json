@@ -14,6 +14,7 @@ def test_homepage_loads_telegram_web_app_shell() -> None:
     assert "result.json" in response.text
     assert "Быстрый анализ сообщения или переписки" in response.text
     assert "дружбу/поддержку" in response.text
+    assert "здоровье диалога" in response.text
 
 
 def test_single_message_endpoint_returns_demo_analysis() -> None:
@@ -45,6 +46,9 @@ def test_pasted_messages_endpoint_returns_relationship_risk_analysis() -> None:
     assert data["abuse"]["level"] in {"средний", "высокий"}
     assert data["red_flags"]
     assert data["friendship"]["level"] in {"хрупкая", "напряжённая"}
+    assert data["conversation_health"]["conflict"] >= 45
+    assert data["conversation_health"]["level"] in {"напряжённое", "кризисное/рисковое"}
+    assert any("специал" in segment.lower() for segment in data["audience_segments"])
 
 
 def test_pasted_messages_endpoint_returns_friendship_meter() -> None:
@@ -60,6 +64,8 @@ def test_pasted_messages_endpoint_returns_friendship_meter() -> None:
     assert data["mode"] == "multi_message"
     assert data["friendship"]["score"] >= 70
     assert data["friendship"]["level"] == "крепкая"
+    assert data["conversation_health"]["score"] >= 70
+    assert data["conversation_health"]["level"] == "устойчивое"
     assert "Поддержка" in data["friendship"]["explanation"]
 
 
